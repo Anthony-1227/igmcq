@@ -1,23 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Welcome to nginx!</title>
-<style>
-html { color-scheme: light dark; }
-body { width: 35em; margin: 0 auto;
-font-family: Tahoma, Verdana, Arial, sans-serif; }
-</style>
+  <meta charset="UTF-8">
+  <title>Simple Quiz</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<h1>Welcome to nginx!</h1>
-<p>If you see this page, the nginx web server is successfully installed and
-working. Further configuration is required.</p>
 
-<p>For online documentation and support please refer to
-<a href="http://nginx.org/">nginx.org</a>.<br/>
-Commercial support is available at
-<a href="http://nginx.com/">nginx.com</a>.</p>
-
-<p><em>Thank you for using nginx.</em></p>
+  <div class="quiz-container">
+    <div class="question">What is the capital of France?</div>
+    <div class="answers">
+      <button onclick="checkAnswer(this, false)">Berlin</button>
+      <button onclick="checkAnswer(this, false)">Madrid</button>
+      <button onclick="checkAnswer(this, true)">Paris</button>
+      <button onclick="checkAnswer(this, false)">Rome</button>
+    </div>
+    <div class="result" id="result"></div>
+  </div>
+  
 </body>
 </html>
