@@ -1,12 +1,9 @@
-import os
-from pdf2image import convert_from_path
 from PIL import Image
 import pytesseract
 import re
+import os
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-
-folder_path=r'C:\Users\Ant\Documents\igmcq\output_images'
 
 def crop_questions(image_path, output_dir="questions_output"):
     image = Image.open(image_path)
@@ -79,30 +76,11 @@ def crop_questions(image_path, output_dir="questions_output"):
 
     print("\nDone!")
 
-def pdf_to_images(pdf_path, output_folder=None, dpi=500, poppler_path=r"C:\poppler-24.08.0\Library\bin"):
-        
-    # Set default output folder if not provided
-    if output_folder is None:
-        output_folder = os.path.join(os.path.dirname(pdf_path), "output_images")
-
-    # Create output folder if it doesn't exist
-    os.makedirs(output_folder, exist_ok=True)
-
-    # Convert PDF to images
-    pages = convert_from_path(pdf_path, dpi, poppler_path=poppler_path)
-
-    # Save pages as JPEG images in output folder
-    for i, page in enumerate(pages):
-        save_path = os.path.join(output_folder, f'page{i}.jpg')
-        page.save(save_path, 'JPEG')
-        print(f'Saved page {i} to {save_path}')
-
-def process_all_files(folder_path):
-    for filename in os.listdir(folder_path):
-        file_path = os.path.join(folder_path, filename)
-        if os.path.isfile(file_path):  # Make sure it's a file
-            crop_questions(file_path)
-
-pdf_to_images(r"C:\Users\Ant\Documents\igmcq\pythonstuff\test.pdf", folder_path)
-
-process_all_files(folder_path)
+folder_path = r"C:\Users\Ant\Documents\igmcq\pythonstuff\output_images"
+for i in range(1, 19):
+    file_name = f"page{i}.jpg"
+    file_path = os.path.join(folder_path, file_name)
+    if os.path.exists(file_path):
+        crop_questions(file_path)
+    else:
+        print(f"File not found: {file_path}")
