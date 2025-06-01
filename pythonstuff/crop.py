@@ -1,86 +1,64 @@
-from PIL import Image
-import pytesseract
-import re
+import subprocess
 import os
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+def download_pastpaper(subject: str, code: str, D1: str, D2: str, year: str, p: str = "qp"):
+    url = "https://pastpapers.co/cie/IGCSE/"
 
-def crop_questions(image_path, output_dir="questions_output"):
-    image = Image.open(image_path)
-    width, height = image.size
-    ignore_margin = 400
-    padding_top = 20
-
-    base_name = os.path.splitext(os.path.basename(image_path))[0]
-
-    data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-
-    number_pattern = re.compile(r'^\d+\.?$')  # matches "1" or "1."
-
-    left_limit = width * 0.15
-
-    print("Scanning for left-aligned numbers (excluding margins)...")
-
-    question_positions = []
-
-    for i, word in enumerate(data["text"]):
-        word_clean = word.strip()
-        if number_pattern.match(word_clean):
-            question_num_str = word_clean.rstrip('.')  # Remove trailing dot if present
-            if question_num_str.isdigit():
-                question_num = int(question_num_str)
-                if 1 <= question_num <= 40:  # Only keep question numbers 1 to 40
-                    x = data["left"][i]
-                    y = data["top"][i]
-                    if x <= left_limit and ignore_margin <= y <= (height - ignore_margin):
-                        print(f"Found possible question number '{question_num}' at x={x}, y={y}")
-                        question_positions.append((question_num, y))
-
-    # Sort and clean based on vertical distance
-    question_positions.sort(key=lambda x: x[1])
-    cleaned_positions = []
-    min_distance = 20
-
-    for qnum, y in question_positions:
-        if not cleaned_positions or abs(y - cleaned_positions[-1][1]) > min_distance:
-            cleaned_positions.append((qnum, y))
-
-    if not cleaned_positions:
-        print("No question numbers detected.")
+    # Determine exam series
+    if D1 == "F" and D2 == "M":
+        series = "March"
+        s1 = "Mar"
+        s2 = "m"
+    elif D1 == "M" and D2 == "J":
+        series = "May-June"
+        s1 = "Mar"
+        s2 = "s"
+    elif D1 == "O" and D2 == "N":
+        series = "Oct-Nov"
+        s1 = "Nov"
+        s2 = "w"
+    else:
+        print(f"Invalid series: {D1}{D2}")
         return
 
-    os.makedirs(output_dir, exist_ok=True)
+    subjects = {
+        "0620": "Chemistry",
+        "0610": "Biology",
+        "0625": "Physics",
+    }
 
-    print(f"\nCropping {len(cleaned_positions)} questions...\n")
+    subname = subjects.get(subject)
+    if not subname:
+        print(f"Unknown subject: {subject}")
+        return
 
-    for i in range(len(cleaned_positions)):
-        question_num, y_start_raw = cleaned_positions[i]
-        y_start = max(y_start_raw - padding_top, 0)
-
-        if i + 1 < len(cleaned_positions):
-            y_end = cleaned_positions[i + 1][1]
-        else:
-            y_end = height
-
-        if y_end < y_start:
-            print(f"Warning: y_end ({y_end}) < y_start ({y_start}), adjusting y_end.")
-            y_end = y_start + 10
-
-        print(f"Cropping question {question_num}: from y={y_start} to y={y_end}")
-
-        cropped = image.crop((0, y_start, width, y_end))
-        output_filename = f"{base_name}_question_{question_num}.jpg"
-        output_path = os.path.join(output_dir, output_filename)
-        cropped.save(output_path)
-        print(f"Saved: {output_path}")
-
-    print("\nDone!")
-
-folder_path = r"C:\Users\Ant\Documents\igmcq\pythonstuff\output_images"
-for i in range(1, 19):
-    file_name = f"page{i}.jpg"
-    file_path = os.path.join(folder_path, file_name)
-    if os.path.exists(file_path):
-        crop_questions(file_path)
+    base_url = url + f"{subname}-{subject}"
+    if int(year) <= 17:
+        base_url += f"/20{year}/20{year}%20{s1}/"
     else:
-        print(f"File not found: {file_path}")
+        base_url += f"/20{year}-{series}/"
+
+    filename = f"{subject}_{s2}{year}_{p}_{code}.pdf"
+    full_path = f"C:/Users/Ant/Documents/pastpapers/{filename}"
+    full_url = base_url + filename
+
+    print(f"Downloading: {full_url}")
+    result = subprocess.run(["curl", full_url, "--output", full_path], shell=True)
+
+    if result.returncode == 0:
+        print(f"Saved to: {full_path}")
+    else:
+        print(f"Failed to download: {full_url}")
+
+
+# === Bulk Downloader ===
+subjects = ["0620", "0625", "0610"]
+codes = ["21", "22", "23"]
+years = [str(y)[2:] for y in range(2017, 2025)]  # '17' to '24'
+sessions = [("F", "M"), ("M", "J"), ("O", "N")]
+
+for subject in subjects:
+    for code in codes:
+        for year in years:
+            for D1, D2 in sessions:
+                download_pastpaper(subject, code, D1, D2, year)

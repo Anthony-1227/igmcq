@@ -6,7 +6,8 @@ import re
 
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-folder_path=r'C:\Users\Ant\Documents\igmcq\output_images'
+output_path=r'C:\Users\Ant\Documents\igmcq\output_images'
+question_path=r"C:\Users\Ant\Documents\igmcq\questions"
 
 def crop_questions(image_path, output_dir="questions_output"):
     image = Image.open(image_path)
@@ -80,7 +81,6 @@ def crop_questions(image_path, output_dir="questions_output"):
     print("\nDone!")
 
 def pdf_to_images(pdf_path, output_folder=None, dpi=500, poppler_path=r"C:\poppler-24.08.0\Library\bin"):
-        
     # Set default output folder if not provided
     if output_folder is None:
         output_folder = os.path.join(os.path.dirname(pdf_path), "output_images")
@@ -88,21 +88,31 @@ def pdf_to_images(pdf_path, output_folder=None, dpi=500, poppler_path=r"C:\poppl
     # Create output folder if it doesn't exist
     os.makedirs(output_folder, exist_ok=True)
 
+    # Extract base filename without extension
+    base_name = os.path.splitext(os.path.basename(pdf_path))[0]
+
     # Convert PDF to images
     pages = convert_from_path(pdf_path, dpi, poppler_path=poppler_path)
 
     # Save pages as JPEG images in output folder
     for i, page in enumerate(pages):
-        save_path = os.path.join(output_folder, f'page{i}.jpg')
+        save_path = os.path.join(output_folder, f'{base_name}_page{i}.jpg')
         page.save(save_path, 'JPEG')
         print(f'Saved page {i} to {save_path}')
 
-def process_all_files(folder_path):
+def all_crop(folder_path):
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
-        if os.path.isfile(file_path):  # Make sure it's a file
+        if os.path.isfile(file_path):
             crop_questions(file_path)
 
-pdf_to_images(r"C:\Users\Ant\Documents\igmcq\pythonstuff\test.pdf", folder_path)
+def all_pdf(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        if os.path.isfile(file_path):
+            pdf_to_images(file_path, output_path)
 
-process_all_files(folder_path)
+
+all_pdf(question_path)
+
+all_crop(output_path)
